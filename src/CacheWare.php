@@ -20,16 +20,6 @@ class CacheWare
     const CACHE_EXPIRED = 'Thu, 19 Nov 1981 08:52:00 GMT';
 
     /**
-     * Default cache settings.
-     *
-     * @var array
-     */
-    protected static $defaultSettings = [
-        'limiter' => null,
-        'expire' => 180,
-    ];
-
-    /**
      * @var array
      */
     protected $settings;
@@ -43,7 +33,6 @@ class CacheWare
     {
         $this->settings = array_merge(
             $this->getCacheParams(),
-            self::$defaultSettings,
             $settings
         );
     }
@@ -57,7 +46,7 @@ class CacheWare
     {
         return [
             'limiter' => session_cache_limiter(),
-            'expire' => session_cache_expire(),
+            'expire' => session_cache_expire() ?: 180,
         ];
     }
 
