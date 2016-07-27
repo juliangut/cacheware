@@ -66,33 +66,34 @@ class CacheWare
     {
         // Prevent headers from being automatically sent to client
         ini_set('session.use_trans_sid', false);
-        ini_set('session.use_cookies', false);
+        ini_set('session.use_cookies', true);
         ini_set('session.use_only_cookies', true);
         ini_set('session.use_strict_mode', false);
         ini_set('session.cache_limiter', '');
 
-        return $next($request, $this->respondWithCacheHeaders($response));
+        return $next($request, $this->respondWithCacheHeaders($this->settings, $response));
     }
 
     /**
      * Add corresponding cache headers to response.
      *
+     * @param array             $settings
      * @param ResponseInterface $response
      *
      * @return ResponseInterface
      */
-    protected function respondWithCacheHeaders(ResponseInterface $response)
+    protected function respondWithCacheHeaders(array $settings, ResponseInterface $response)
     {
-        switch ($this->settings['limiter']) {
+        switch ($settings['limiter']) {
             case 'public':
-                return $this->respondWithPublicCache($response);
+                return $this->respondWithPublicCache($settings, $response);
 
             case 'private':
-                return $this->respondWithPrivateCache($response);
+                return $this->respondWithPrivateCache($settings, $response);
 
             case 'private_no_expire':
             case 'private-no-expire':
-                return $this->respondWithPrivateNoExpireCache($response);
+                return $this->respondWithPrivateNoExpireCache($settings, $response);
 
             case 'nocache':
             case 'no-cache':
@@ -105,13 +106,14 @@ class CacheWare
     /**
      * Add public cache headers to response.
      *
+     * @param array             $settings
      * @param ResponseInterface $response
      *
      * @return ResponseInterface
      */
-    protected function respondWithPublicCache(ResponseInterface $response)
+    protected function respondWithPublicCache(array $settings, ResponseInterface $response)
     {
-        $maxAge = $this->settings['expire'] ? (int) $this->settings['expire'] * 60 : 0;
+        $maxAge = $settings['expire'] ? (int) $settings['expire'] * 60 : 0;
 
         $currentDate = new \DateTime('now', new \DateTimeZone('UTC'));
         $expireDate = clone $currentDate;
@@ -129,13 +131,15 @@ class CacheWare
     /**
      * Add private cache headers to response.
      *
+     * @param array             $settings
      * @param ResponseInterface $response
      *
      * @return ResponseInterface
      */
-    protected function respondWithPrivateCache(ResponseInterface $response)
+    protected function respondWithPrivateCache(array $settings, ResponseInterface $response)
     {
         return $this->respondWithPrivateNoExpireCache(
+            $settings,
             $response->withAddedHeader('Expires', self::CACHE_EXPIRED)
         );
     }
@@ -143,13 +147,14 @@ class CacheWare
     /**
      * Add private-no-expire cache headers to response.
      *
+     * @param array             $settings
      * @param ResponseInterface $response
      *
      * @return ResponseInterface
      */
-    protected function respondWithPrivateNoExpireCache(ResponseInterface $response)
+    protected function respondWithPrivateNoExpireCache(array $settings, ResponseInterface $response)
     {
-        $maxAge = $this->settings['expire'] ? (int) $this->settings['expire'] * 60 : 0;
+        $maxAge = $settings['expire'] ? (int) $settings['expire'] * 60 : 0;
         $currentDate = new \DateTime('now', new \DateTimeZone('UTC'));
 
         return $response

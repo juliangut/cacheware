@@ -12,7 +12,7 @@
 
 A PSR7 cache headers management middleware.
 
-This middleware must be run *before* `session_start` has been called so it can prevent PHP session mechanisms from automatically send any kind of header to the client (including session cookie and caching).
+This middleware must be run *before* `session_start` has been called so it can prevent PHP session mechanism from automatically send any kind of header to the client (including session cookie and caching).
 
 > You can use this middleware with [juliangut/sessionware](https://github.com/juliangut/sessionware) which will automatically handle session management.
 
