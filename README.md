@@ -72,6 +72,8 @@ $cacheMiddleware = new CacheWare([
 
 Selects cache limiter type. It's values can be `public`, `private`, `private_no_expire` or `nocache`. If not provided value defined in ini_set `session.cache_limiter` will be automatically used (normally 'nocache').
 
+Cacheware class has CACHE_* constants for convenience. 
+
 If you want to completely disable cache headers give limiter a value of `null`.
 
 #### expire

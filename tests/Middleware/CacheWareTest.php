@@ -47,7 +47,7 @@ class CacheWareTest extends \PHPUnit_Framework_TestCase
 
     public function testPublicCache()
     {
-        $middleware = new CacheWare(['limiter' => 'public']);
+        $middleware = new CacheWare(['limiter' => CacheWare::CACHE_PUBLIC]);
 
         /* @var Response $response */
         $response = $middleware($this->request, $this->response, $this->callback);
@@ -60,7 +60,7 @@ class CacheWareTest extends \PHPUnit_Framework_TestCase
 
     public function testPrivateCache()
     {
-        $middleware = new CacheWare(['limiter' => 'private']);
+        $middleware = new CacheWare(['limiter' => CacheWare::CACHE_PRIVATE]);
 
         /* @var Response $response */
         $response = $middleware($this->request, $this->response, $this->callback);
@@ -74,7 +74,7 @@ class CacheWareTest extends \PHPUnit_Framework_TestCase
 
     public function testPrivateNoExpireCache()
     {
-        $middleware = new CacheWare(['limiter' => 'private_no_expire']);
+        $middleware = new CacheWare(['limiter' => CacheWare::CACHE_PRIVATE_NO_EXPIRE]);
 
         /* @var Response $response */
         $response = $middleware($this->request, $this->response, $this->callback);
@@ -87,7 +87,7 @@ class CacheWareTest extends \PHPUnit_Framework_TestCase
 
     public function testNoCacheCache()
     {
-        $middleware = new CacheWare(['limiter' => 'nocache']);
+        $middleware = new CacheWare(['limiter' => CacheWare::CACHE_NOCACHE]);
 
         /* @var Response $response */
         $response = $middleware($this->request, $this->response, $this->callback);

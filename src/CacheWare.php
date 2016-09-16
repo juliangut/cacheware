@@ -17,6 +17,11 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class CacheWare
 {
+    const CACHE_PUBLIC = 'limit';
+    const CACHE_PRIVATE = 'private';
+    const CACHE_PRIVATE_NO_EXPIRE = 'private_no_expire';
+    const CACHE_NOCACHE = 'nocache';
+
     const CACHE_EXPIRED = 'Thu, 19 Nov 1981 08:52:00 GMT';
 
     /**
@@ -31,23 +36,7 @@ class CacheWare
      */
     public function __construct(array $settings = [])
     {
-        $this->settings = array_merge(
-            $this->getCacheParams(),
-            $settings
-        );
-    }
-
-    /**
-     * Retrieve default cache parameters.
-     *
-     * @return array
-     */
-    protected function getCacheParams()
-    {
-        return [
-            'limiter' => session_cache_limiter(),
-            'expire' => session_cache_expire() ?: 180,
-        ];
+        $this->settings = $settings;
     }
 
     /**
@@ -71,7 +60,24 @@ class CacheWare
         ini_set('session.use_strict_mode', false);
         ini_set('session.cache_limiter', '');
 
-        return $next($request, $this->respondWithCacheHeaders($this->settings, $response));
+        $cacheSettings = array_merge($this->getCacheSettings(), $this->settings);
+
+        $response = $next($request, $response);
+
+        return $this->respondWithCacheHeaders($cacheSettings, $response);
+    }
+
+    /**
+     * Retrieve default cache settings.
+     *
+     * @return array
+     */
+    protected function getCacheSettings()
+    {
+        return [
+            'limiter' => session_cache_limiter(),
+            'expire' => session_cache_expire() ?: 180,
+        ];
     }
 
     /**
@@ -80,23 +86,23 @@ class CacheWare
      * @param array             $settings
      * @param ResponseInterface $response
      *
+     * @throws \InvalidArgumentException
+     *
      * @return ResponseInterface
      */
     protected function respondWithCacheHeaders(array $settings, ResponseInterface $response)
     {
         switch ($settings['limiter']) {
-            case 'public':
+            case static::CACHE_PUBLIC:
                 return $this->respondWithPublicCache($settings, $response);
 
-            case 'private':
+            case static::CACHE_PRIVATE:
                 return $this->respondWithPrivateCache($settings, $response);
 
-            case 'private_no_expire':
-            case 'private-no-expire':
+            case static::CACHE_PRIVATE_NO_EXPIRE:
                 return $this->respondWithPrivateNoExpireCache($settings, $response);
 
-            case 'nocache':
-            case 'no-cache':
+            case static::CACHE_NOCACHE:
                 return $this->respondWithNoCacheCache($response);
         }
 
@@ -108,6 +114,8 @@ class CacheWare
      *
      * @param array             $settings
      * @param ResponseInterface $response
+     *
+     * @throws \InvalidArgumentException
      *
      * @return ResponseInterface
      */
@@ -134,13 +142,15 @@ class CacheWare
      * @param array             $settings
      * @param ResponseInterface $response
      *
+     * @throws \InvalidArgumentException
+     *
      * @return ResponseInterface
      */
     protected function respondWithPrivateCache(array $settings, ResponseInterface $response)
     {
         return $this->respondWithPrivateNoExpireCache(
             $settings,
-            $response->withAddedHeader('Expires', self::CACHE_EXPIRED)
+            $response->withAddedHeader('Expires', static::CACHE_EXPIRED)
         );
     }
 
@@ -149,6 +159,8 @@ class CacheWare
      *
      * @param array             $settings
      * @param ResponseInterface $response
+     *
+     * @throws \InvalidArgumentException
      *
      * @return ResponseInterface
      */
@@ -167,12 +179,14 @@ class CacheWare
      *
      * @param ResponseInterface $response
      *
+     * @throws \InvalidArgumentException
+     *
      * @return ResponseInterface
      */
     protected function respondWithNoCacheCache(ResponseInterface $response)
     {
         return $response
-            ->withAddedHeader('Expires', self::CACHE_EXPIRED)
+            ->withAddedHeader('Expires', static::CACHE_EXPIRED)
             ->withAddedHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0')
             ->withAddedHeader('Pragma', 'no-cache');
     }
